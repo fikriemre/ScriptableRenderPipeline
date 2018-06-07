@@ -11,7 +11,6 @@ namespace UnityEngine.Experimental.Rendering.LightweightPipeline
         DepthPrepass,
         DirectionalShadows,
         LocalShadows,
-        ScreenSpaceShadowResolve,
         ForwardLit,
         Count,
     }
@@ -22,7 +21,6 @@ namespace UnityEngine.Experimental.Rendering.LightweightPipeline
         DepthCopy,
         Sampling,
         Blit,
-        ScrenSpaceShadow,
         Count,
     }
 
@@ -34,7 +32,6 @@ namespace UnityEngine.Experimental.Rendering.LightweightPipeline
         public static int OpaqueColor;
         public static int DirectionalShadowmap;
         public static int LocalShadowmap;
-        public static int ScreenSpaceShadowmap;
     }
 
     public class LightweightForwardRenderer
@@ -95,7 +92,6 @@ namespace UnityEngine.Experimental.Rendering.LightweightPipeline
             RegisterSurface("_CameraOpaqueTexture", out RenderTargetHandles.OpaqueColor);
             RegisterSurface("_DirectionalShadowmapTexture", out RenderTargetHandles.DirectionalShadowmap);
             RegisterSurface("_LocalShadowmapTexture", out RenderTargetHandles.LocalShadowmap);
-            RegisterSurface("_ScreenSpaceShadowMapTexture", out RenderTargetHandles.ScreenSpaceShadowmap);
 
             m_Materials = new Material[(int)MaterialHandles.Count]
             {
@@ -103,7 +99,6 @@ namespace UnityEngine.Experimental.Rendering.LightweightPipeline
                 CoreUtils.CreateEngineMaterial(pipelineAsset.copyDepthShader),
                 CoreUtils.CreateEngineMaterial(pipelineAsset.samplingShader),
                 CoreUtils.CreateEngineMaterial(pipelineAsset.blitShader),
-                CoreUtils.CreateEngineMaterial(pipelineAsset.screenSpaceShadowShader),
             };
 
             m_RenderPassSet = new ScriptableRenderPass[(int)RenderPassHandles.Count]
@@ -111,7 +106,6 @@ namespace UnityEngine.Experimental.Rendering.LightweightPipeline
                 new DepthOnlyPass(this),
                 new DirectionalShadowsPass(this),
                 new LocalShadowsPass(this),
-                new ScreenSpaceShadowResolvePass(this),
                 new ForwardLitPass(this),
             };
 
@@ -168,8 +162,7 @@ namespace UnityEngine.Experimental.Rendering.LightweightPipeline
             shadowDescriptor.dimension = TextureDimension.Tex2D;
 
             bool requiresCameraDepth = renderingData.cameraData.requiresDepthTexture;
-            bool requiresDepthPrepass = renderingData.shadowData.requiresScreenSpaceShadowResolve ||
-                renderingData.cameraData.isSceneViewCamera || (requiresCameraDepth && !CanCopyDepth(ref renderingData.cameraData));
+            bool requiresDepthPrepass = renderingData.cameraData.isSceneViewCamera || (requiresCameraDepth && !CanCopyDepth(ref renderingData.cameraData));
 
             // For now VR requires a depth prepass until we figure out how to properly resolve texture2DMS in stereo
             requiresDepthPrepass |= renderingData.cameraData.isStereoEnabled;
@@ -179,11 +172,7 @@ namespace UnityEngine.Experimental.Rendering.LightweightPipeline
                 EnqueuePass(cmd, RenderPassHandles.DepthPrepass, baseDescriptor, null, RenderTargetHandles.DepthTexture);
 
             if (renderingData.shadowData.renderDirectionalShadows)
-            {
                 EnqueuePass(cmd, RenderPassHandles.DirectionalShadows, shadowDescriptor);
-                if (renderingData.shadowData.requiresScreenSpaceShadowResolve)
-                    EnqueuePass(cmd, RenderPassHandles.ScreenSpaceShadowResolve, baseDescriptor, new[] {RenderTargetHandles.ScreenSpaceShadowmap});
-            }
 
             if (renderingData.shadowData.renderLocalShadows)
                 EnqueuePass(cmd, RenderPassHandles.LocalShadows, shadowDescriptor);

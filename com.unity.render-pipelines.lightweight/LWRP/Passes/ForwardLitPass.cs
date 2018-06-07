@@ -282,6 +282,7 @@ namespace UnityEngine.Experimental.Rendering.LightweightPipeline
                 shadowData.supportsSoftShadows;
 
             CoreUtils.SetKeyword(cmd, LightweightKeywordStrings.DirectionalShadows, directionalShadowQuality != LightShadows.None);
+            CoreUtils.SetKeyword(cmd, LightweightKeywordStrings.CascadeShadows, directionalShadowQuality != LightShadows.None && shadowData.directionalLightCascadeCount > 1);
             CoreUtils.SetKeyword(cmd, LightweightKeywordStrings.LocalShadows, localShadowQuality != LightShadows.None);
             CoreUtils.SetKeyword(cmd, LightweightKeywordStrings.SoftShadows, hasSoftShadows);
 

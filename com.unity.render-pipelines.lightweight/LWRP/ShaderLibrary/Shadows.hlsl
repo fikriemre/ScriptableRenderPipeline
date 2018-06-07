@@ -7,14 +7,6 @@
 
 #define MAX_SHADOW_CASCADES 4
 
-#ifndef SHADOWS_SCREEN
-#ifdef SHADER_API_GLES
-#define SHADOWS_SCREEN 0
-#else
-#define SHADOWS_SCREEN 1
-#endif
-#endif
-
 SCREENSPACE_TEXTURE(_ScreenSpaceShadowMapTexture);
 SAMPLER(sampler_ScreenSpaceShadowMapTexture);
 
@@ -94,22 +86,6 @@ half GetMainLightShadowStrength()
 half GetLocalLightShadowStrenth(int lightIndex)
 {
     return _LocalShadowStrength[lightIndex];
-}
-
-half SampleScreenSpaceShadowMap(float4 shadowCoord)
-{
-    shadowCoord.xy /= shadowCoord.w;
-
-    // The stereo transform has to happen after the manual perspective divide
-    shadowCoord.xy = UnityStereoTransformScreenSpaceTex(shadowCoord.xy);
-
-#if defined(UNITY_STEREO_INSTANCING_ENABLED) || defined(UNITY_STEREO_MULTIVIEW_ENABLED)
-    half attenuation = SAMPLE_TEXTURE2D_ARRAY(_ScreenSpaceShadowMapTexture, sampler_ScreenSpaceShadowMapTexture, shadowCoord.xy, unity_StereoEyeIndex).x;
-#else
-    half attenuation = SAMPLE_TEXTURE2D(_ScreenSpaceShadowMapTexture, sampler_ScreenSpaceShadowMapTexture, shadowCoord.xy).x;
-#endif
-
-    return attenuation;
 }
 
 real SampleShadowmap(float4 shadowCoord, TEXTURE2D_SHADOW_ARGS(ShadowMap, sampler_ShadowMap), ShadowSamplingData samplingData, half shadowStrength)
@@ -201,38 +177,23 @@ float4 TransformWorldToShadowCoord(float3 positionWS)
 #endif
 }
 
-float4 ComputeShadowCoord(float4 clipPos)
-{
-    // TODO: This might have to be corrected for double-wide and texture arrays
-    return ComputeScreenPos(clipPos);
-}
-
 half MainLightRealtimeShadowAttenuation(float4 shadowCoord)
 {
-#if !defined(_SHADOWS_ENABLED)
-    return 1.0h;
-#endif
-
-#if SHADOWS_SCREEN
-    return SampleScreenSpaceShadowMap(shadowCoord);
-#else
     ShadowSamplingData shadowSamplingData = GetMainLightShadowSamplingData();
     half shadowStrength = GetMainLightShadowStrength();
     return SampleShadowmap(shadowCoord, TEXTURE2D_PARAM(_DirectionalShadowmapTexture, sampler_DirectionalShadowmapTexture), shadowSamplingData, shadowStrength);
-#endif
-
 }
 
 half LocalLightRealtimeShadowAttenuation(int lightIndex, float3 positionWS)
 {
 #if !defined(_LOCAL_SHADOWS_ENABLED)
     return 1.0h;
-#else
+#endif
+
     float4 shadowCoord = mul(_LocalWorldToShadowAtlas[lightIndex], float4(positionWS, 1.0));
     ShadowSamplingData shadowSamplingData = GetLocalLightShadowSamplingData();
     half shadowStrength = GetLocalLightShadowStrenth(lightIndex);
     return SampleShadowmap(shadowCoord, TEXTURE2D_PARAM(_LocalShadowmapTexture, sampler_LocalShadowmapTexture), shadowSamplingData, shadowStrength);
-#endif
 }
 
 #endif

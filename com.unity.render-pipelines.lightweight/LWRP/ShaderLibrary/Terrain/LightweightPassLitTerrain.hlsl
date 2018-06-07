@@ -24,7 +24,9 @@ struct VertexOutput
 #endif
     half4 fogFactorAndVertexLight   : TEXCOORD6; // x: fogFactor, yzw: vertex light
     float3 positionWS               : TEXCOORD7;
+#if defined(_SHADOWS_ENABLED) && !defined(_SHADOWS_CASCADE)
     float4 shadowCoord              : TEXCOORD8;
+#endif
     float4 clipPos                  : SV_POSITION;
 };
 
@@ -41,7 +43,7 @@ void InitializeInputData(VertexOutput IN, half3 normalTS, out InputData input)
 #endif
 
     input.viewDirectionWS = SafeNormalize(GetCameraPositionWS() - IN.positionWS);
-#ifdef _SHADOWS_ENABLED
+#if defined(_SHADOWS_ENABLED) && !defined(_SHADOWS_CASCADE)
     input.shadowCoord = IN.shadowCoord;
 #else
     input.shadowCoord = float4(0, 0, 0, 0);
@@ -125,12 +127,8 @@ VertexOutput SplatmapVert(VertexInput v)
     o.positionWS = positionWS;
     o.clipPos = clipPos;
 
-#ifdef _SHADOWS_ENABLED
-#if SHADOWS_SCREEN
-    o.shadowCoord = ComputeShadowCoord(o.clipPos);
-#else
+#if defined(_SHADOWS_ENABLED) && !defined(_SHADOWS_CASCADE)
     o.shadowCoord = TransformWorldToShadowCoord(positionWS);
-#endif
 #endif
 
     return o;

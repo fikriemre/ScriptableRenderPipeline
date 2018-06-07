@@ -403,11 +403,6 @@ namespace UnityEngine.Experimental.Rendering.LightweightPipeline
             get { return resources != null ? resources.CopyDepthShader : null; }
         }
 
-        public Shader screenSpaceShadowShader
-        {
-            get { return resources != null ? resources.ScreenSpaceShadowShader : null; }
-        }
-
         public Shader samplingShader
         {
             get { return resources != null ? resources.SamplingShader : null; }

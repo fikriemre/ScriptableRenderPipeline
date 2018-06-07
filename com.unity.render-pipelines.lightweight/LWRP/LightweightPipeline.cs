@@ -242,12 +242,8 @@ namespace UnityEngine.Experimental.Rendering.LightweightPipeline
 
         void InitializeShadowData(bool hasDirectionalShadowCastingLight, bool hasLocalShadowCastingLight, out ShadowData shadowData)
         {
-            // Until we can have keyword stripping forcing single cascade hard shadows on gles2
-            bool supportsScreenSpaceShadows = SystemInfo.graphicsDeviceType != GraphicsDeviceType.OpenGLES2;
-
             shadowData.renderDirectionalShadows = pipelineAsset.supportsDirectionalShadows && hasDirectionalShadowCastingLight;
-            shadowData.requiresScreenSpaceShadowResolve = shadowData.renderDirectionalShadows && supportsScreenSpaceShadows;
-            shadowData.directionalLightCascadeCount = (shadowData.requiresScreenSpaceShadowResolve) ? pipelineAsset.cascadeCount : 1;
+            shadowData.directionalLightCascadeCount = pipelineAsset.cascadeCount;
             shadowData.directionalShadowAtlasWidth = pipelineAsset.directionalShadowAtlasResolution;
             shadowData.directionalShadowAtlasHeight = pipelineAsset.directionalShadowAtlasResolution;
 
