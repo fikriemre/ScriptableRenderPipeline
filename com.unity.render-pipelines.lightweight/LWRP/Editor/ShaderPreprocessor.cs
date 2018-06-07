@@ -20,6 +20,7 @@ namespace UnityEditor.Experimental.Rendering.LightweightPipeline
         public static readonly ShaderKeyword MainLightCookie = new ShaderKeyword(LightweightKeywordStrings.MainLightCookie);
         public static readonly ShaderKeyword DirectionalShadows = new ShaderKeyword(LightweightKeywordStrings.DirectionalShadows);
         public static readonly ShaderKeyword LocalShadows = new ShaderKeyword(LightweightKeywordStrings.LocalShadows);
+        public static readonly ShaderKeyword CascadeShadows = new ShaderKeyword(LightweightKeywordStrings.CascadeShadows);
         public static readonly ShaderKeyword SoftShadows = new ShaderKeyword(LightweightKeywordStrings.SoftShadows);
 
         public static readonly ShaderKeyword Lightmap = new ShaderKeyword("LIGHTMAP_ON");
@@ -91,8 +92,11 @@ namespace UnityEditor.Experimental.Rendering.LightweightPipeline
 
         bool StripInvalidVariants(ShaderCompilerData compilerData)
         {
-            bool isShadowVariant = compilerData.shaderKeywordSet.IsEnabled(LightweightKeyword.DirectionalShadows) ||
-                compilerData.shaderKeywordSet.IsEnabled(LightweightKeyword.LocalShadows);
+            bool isDirectionalShadowVariant = compilerData.shaderKeywordSet.IsEnabled(LightweightKeyword.DirectionalShadows);
+            bool isShadowVariant = isDirectionalShadowVariant || compilerData.shaderKeywordSet.IsEnabled(LightweightKeyword.LocalShadows);
+
+            if (compilerData.shaderKeywordSet.IsEnabled(LightweightKeyword.CascadeShadows) && !isDirectionalShadowVariant)
+                return true;
 
             if (compilerData.shaderKeywordSet.IsEnabled(LightweightKeyword.SoftShadows) && !isShadowVariant)
                 return true;
